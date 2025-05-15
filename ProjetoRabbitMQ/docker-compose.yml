@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Serviço para o RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-server
+    ports:
+      - "5672:5672"    # Porta de comunicação AMQP
+      - "15672:15672"  # Painel de administração
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+
+  # Serviço para a API de Pedidos
+  apipedidos:
+    build:
+      context: .
+      dockerfile: ApiPedidos/Dockerfile
+    container_name: api-pedidos
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=pedidos.db
+
+  # Serviço para a API de Estoque
+  apiestoque:
+    build:
+      context: .
+      dockerfile: ApiEstoque/Dockerfile
+    container_name: api-estoque
+    ports:
+      - "8081:8081"
+    depends_on:
+      - rabbitmq
+    networks:
+      - app-network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Data Source=estoque.db
+
+networks:
+  app-network:
+    driver: bridge
