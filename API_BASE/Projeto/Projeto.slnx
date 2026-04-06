@@ -1,3 +1,5 @@
 <Solution>
   <Project Path="API_Principal/API_Principal.csproj" />
+  <Project Path="Projeto.Business/Projeto.Business.csproj" Id="46578374-b9db-4593-b0ea-21628e38f359" />
+  <Project Path="Projeto.Data/Projeto.Data.csproj" Id="f2d05cf1-a255-49eb-9bcd-443b755572b3" />
 </Solution>
