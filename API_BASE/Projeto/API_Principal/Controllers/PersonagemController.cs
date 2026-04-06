@@ -8,9 +8,9 @@ namespace API_Principal.Controllers
     [Route("api/[controller]")]    
     public class PersonagemController : ControllerBase
     {
-        private readonly DbContext _dbContext;
+        private readonly AppDbContext _dbContext;
 
-        public PersonagemController(DbContext personagemDbContext)
+        public PersonagemController(AppDbContext personagemDbContext)
         {
             _dbContext  = personagemDbContext;
         }

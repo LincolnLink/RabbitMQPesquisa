@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Projeto.Data.Context
 {
-    public class DbContext : Microsoft.EntityFrameworkCore.DbContext
+    public class AppDbContext : DbContext
     {
-        public DbContext(DbContextOptions<DbContext> options) : base(options){}
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options){}
         public DbSet<Personagem> Personagens { get; set; }
     }
 }

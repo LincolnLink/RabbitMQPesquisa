@@ -6,7 +6,16 @@
 
 - DotnetCore 9. com PostgreeMSQL
 
-# Instalção
+
+# Instalação na maquina
+
+- SDK9
+
+- dotnet tool install --global dotnet-ef.
+
+- instala o banco que vai usar, no meu caso foi o postgreSQL;
+
+# Instalção pacote nuget
 
 - no vscode: ctrl+shift+P escreve nuget.
 
@@ -33,7 +42,7 @@ dotnet add package Microsoft.EntityFrameworkCore
 
 - Cria um arquivo de controler.
 
-- Cria a propriedade "private readonly DbContext _dbContext;"
+- Cria a propriedade "private readonly AppDbContext _dbContext;"
 
 - Cria o metodo construtor, recebendo a injeção de dependencia: "_dbContext  = DbContext;"
 

@@ -11,7 +11,7 @@ namespace API_Principal
                         
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-            builder.Services.AddDbContext<Projeto.Data.Context.DbContext>(options =>
+            builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
 
             builder.Services.AddControllers();
