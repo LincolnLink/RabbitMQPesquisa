@@ -1,6 +1,24 @@
-@API_Principal_HostAddress = http://localhost:5096
+@API_Principal_HostAddress = https://localhost:44395
 
-GET {{API_Principal_HostAddress}}/weatherforecast/
+### GET - Listar todos os produtos
+GET {{API_Principal_HostAddress}}/api/produto
 Accept: application/json
 
-###
+### GET - Buscar produto por ID
+GET {{API_Principal_HostAddress}}/api/produto/1
+Accept: application/json
+
+### POST - Criar novo produto
+POST {{API_Principal_HostAddress}}/api/produto
+Content-Type: application/json
+
+"Notebook Dell"
+
+### PUT - Atualizar produto
+PUT {{API_Principal_HostAddress}}/api/produto/1
+Content-Type: application/json
+
+"Notebook Dell Atualizado"
+
+### DELETE - Deletar produto
+DELETE {{API_Principal_HostAddress}}/api/produto/1

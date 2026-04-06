@@ -1,33 +1,23 @@
 # RabbitMQPesquisa
-Estudo sobre RabbitMQ , exemplo pratico de como funciona.
+- Estudo sobre RabbitMQ , exemplo pratico de como funciona.
 
-✅ O que o projeto vai incluir
-🧱 Arquitetura
-ApiPedidos
+- Desenvolvendo uma API base com Microsoft.EntityFrameworkCore.
 
-Cria pedidos (Producer)
+- DotnetCore 10.
 
-Publica eventos no RabbitMQ
+- no vscode: ctrl+shift+P escreve nuget.
 
-Usa SQLite (pedidos.db)
+- Instalando entitifremewrok.(versão 9, para funcionar com o pomelo)
 
-ApiEstoque
+dotnet add package Microsoft.EntityFrameworkCore
 
-Escuta eventos do RabbitMQ (Consumer)
+- Instalando entitifremewrok.tools
 
-Dá baixa no estoque
+- Pomelo.EntityFrameworkCore.MySql
 
-Usa SQLite (estoque.db)
 
-📦 Tecnologias
-ASP.NET Core (.NET 8)
 
-Entity Framework Core
 
-SQLite
 
-RabbitMQ
 
-Swagger (Swashbuckle)
 
-(opcional) Docker para RabbitMQ e APIs
