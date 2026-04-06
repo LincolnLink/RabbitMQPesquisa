@@ -4,7 +4,7 @@
 
 - Estudo sobre RabbitMQ , exemplo pratico de como funciona.
 
-- DotnetCore 9.
+- DotnetCore 9. com PostgreeMSQL
 
 # Instalção
 
@@ -16,7 +16,7 @@ dotnet add package Microsoft.EntityFrameworkCore
 
 - Instalando entitifremewrok.tools
 
-- Pomelo.EntityFrameworkCore.MySql
+- Npgsql.EntityFrameworkCore.PostgreSQL
 
 
 # Criando o DbContext
@@ -33,9 +33,9 @@ dotnet add package Microsoft.EntityFrameworkCore
 
 - Cria um arquivo de controler.
 
-- Cria a propriedade "private readonly PersonagemDbContext _dbContext;"
+- Cria a propriedade "private readonly DbContext _dbContext;"
 
-- Cria o metodo construtor, recebendo a injeção de dependencia: "_dbContext  = personagemDbContext;"
+- Cria o metodo construtor, recebendo a injeção de dependencia: "_dbContext  = DbContext;"
 
 # Cria a string de conexao.
 
@@ -43,7 +43,7 @@ dotnet add package Microsoft.EntityFrameworkCore
 
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=localhost;Database=BancoPrincipal;User=root;Password=123456;"
+    "DefaultConnection": "Host=localhost;Port=5432;Database=BancoPrincipal;Username=postgres;Password=123456;"
   }
 }
 
@@ -53,16 +53,30 @@ dotnet add package Microsoft.EntityFrameworkCore
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-var serverVersion = new MySqlServerVersion(new Version(8, 0, 40));
-
-builder.Services.AddDbContext<PersonagemDbContext>(options =>
-           options.UseMySql(connectionString, serverVersion));
+builder.Services.AddDbContext<Projeto.Data.Context.DbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 # Rodando o migration
 
+- Criar uma Migration:
+
 dotnet ef migrations add InitialCreate --project Projeto.Data --startup-project API_Principal
 
+- Aplicar a Migration no banco (criar tabelas):
+
 dotnet ef database update --project Projeto.Data --startup-project API_Principal
+
+- Listar todas as migrations:
+
+dotnet ef migrations list --project Projeto.Data --startup-project API_Principal
+
+- Remover última migration (se precisar corrigir algo):
+
+dotnet ef migrations remove --project Projeto.Data --startup-project API_Principal
+
+- Reverter para uma migration específica:
+
+dotnet ef database update NomeDaMigration --project Projeto.Data --startup-project API_Principal
 
 
 
