@@ -10,8 +10,6 @@ namespace API_Principal
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-            builder.Services.AddOpenApi();
             builder.Services.AddSwaggerGen();
 
             var app = builder.Build();
@@ -19,7 +17,6 @@ namespace API_Principal
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
-                app.MapOpenApi();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
@@ -28,7 +25,8 @@ namespace API_Principal
 
             app.UseAuthorization();
 
-            app.MapGet("/", () => Results.Redirect("/swagger"));
+            app.MapGet("/", () => Results.Redirect("/swagger"))
+               .ExcludeFromDescription();
 
             app.MapControllers();
 
