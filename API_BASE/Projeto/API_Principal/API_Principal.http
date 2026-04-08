@@ -1,4 +1,4 @@
-@API_Principal_HostAddress = https://localhost:44395
+@API_Principal_HostAddress = https://localhost:5001
 
 ### GET - Listar todos os produtos
 GET {{API_Principal_HostAddress}}/api/produto
