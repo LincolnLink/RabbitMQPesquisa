@@ -1,36 +1,39 @@
-﻿using API_Principal.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Projeto.Data.Context;
+using Projeto.Business.Models;
+using Projeto.Business.Interfaces;
 
 namespace API_Principal.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]    
-    public class PersonagemController : ControllerBase
+    public class PersonagemController(AppDbContext appDbContext, IPersonagemService personagemService) : BaseController
     {
-        private readonly AppDbContext _dbContext;
-
-        public PersonagemController(AppDbContext personagemDbContext)
-        {
-            _dbContext  = personagemDbContext;
-        }
+        private readonly AppDbContext _dbContext = appDbContext;
+        private readonly IPersonagemService _personagemService = personagemService;
 
         [HttpPost]
         public async Task<IActionResult> Adicionar(Personagem personagem)
         {
-            _dbContext.Personagens.Add(personagem);
-            await _dbContext.SaveChangesAsync();
-            return Ok(personagem);
-            //return CreatedAtAction(nameof(ObterPorId), new { id = personagem.Id }, personagem);
+            if (!ModelState.IsValid) 
+                return BadRequest(ModelState);
+
+            await _personagemService.Adicionar(personagem);
+
+            return RespostaPersonalizada(_personagemService, personagem, "Personagem adicionado com sucesso!");
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Personagem>>> ObterTodos()
         {
             var personagens = await _dbContext.Personagens.ToListAsync();
-            return Ok(personagens);
+
+            return Ok(new
+            {
+                sucesso = true,
+                dados = personagens
+            });
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿namespace API_Principal.Models
+﻿
+namespace Projeto.Business.Models
 {
-    public class Personagem
+    public class Personagem : Entity
     {
-        public int Id { get; set; }
         public string Nome { get; set; }
         public string Tipo { get; set; }
     }

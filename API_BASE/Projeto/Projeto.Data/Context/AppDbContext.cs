@@ -1,5 +1,5 @@
-﻿using API_Principal.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using Projeto.Business.Models;
 
 
 namespace Projeto.Data.Context
