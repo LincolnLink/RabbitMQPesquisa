@@ -7,5 +7,7 @@ namespace Projeto.Business.Interfaces
         Task Adicionar(Personagem personagem);
         Task Atualizar(Personagem personagem);
         Task Remover(Guid id);
+        Task<Personagem?> ObterPorId(Guid id);
+        Task<IEnumerable<Personagem>> ObterTodos();
     }
 }

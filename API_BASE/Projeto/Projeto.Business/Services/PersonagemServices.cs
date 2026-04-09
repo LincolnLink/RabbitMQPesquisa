@@ -13,10 +13,9 @@ namespace Projeto.Business.Services
             _personagemRepository = personagemRepository;
         }
 
-
         public async Task Adicionar(Personagem personagem)
         {
-            LimparErros(); // Limpa erros de operações anteriores
+            LimparErros();
 
             if (!ExecutarValidacao(new PersonagemValidation(), personagem)) 
                 return;
@@ -24,19 +23,44 @@ namespace Projeto.Business.Services
             await _personagemRepository.Adicionar(personagem);            
         }
 
-        public Task Atualizar(Personagem personagem)
+        public async Task Atualizar(Personagem personagem)
         {
-            throw new NotImplementedException();
+            LimparErros();
+
+            if (!ExecutarValidacao(new PersonagemValidation(), personagem))
+                return;
+
+            await _personagemRepository.Atualizar(personagem);
+        }
+
+        public async Task Remover(Guid id)
+        {
+            LimparErros();
+
+            var personagem = await _personagemRepository.ObterPorId(id);
+
+            if (personagem == null)
+            {
+                AdicionarErro("Personagem não encontrado.");
+                return;
+            }
+
+            await _personagemRepository.Remover(id);
+        }
+
+        public async Task<Personagem?> ObterPorId(Guid id)
+        {
+            return await _personagemRepository.ObterPorId(id);
+        }
+
+        public async Task<IEnumerable<Personagem>> ObterTodos()
+        {
+            return await _personagemRepository.ObterTodos();
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
-        }
-
-        public Task Remover(Guid id)
-        {
-            throw new NotImplementedException();
+            _personagemRepository?.Dispose();
         }
     }
 }
