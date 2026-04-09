@@ -1,3 +1,4 @@
+using API_Principal.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Projeto.Data.Context;
 
@@ -13,6 +14,12 @@ namespace API_Principal
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseNpgsql(connectionString));
+
+            // AutoMapper
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
+            // Dependency Injection
+            builder.Services.ResolveDependencies();
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();

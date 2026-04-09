@@ -1,9 +1,6 @@
 ﻿using FluentValidation;
-using FluentValidation.Results;
 using Projeto.Business.Interfaces;
 using Projeto.Business.Models;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 
 namespace Projeto.Business.Services
 {
