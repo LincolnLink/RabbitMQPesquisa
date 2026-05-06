@@ -11,12 +11,7 @@ namespace Projeto.Data.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Personagem>(entity =>
-            {
-                entity.Property(e => e.Id)
-                    .HasColumnType("uuid")
-                    .ValueGeneratedOnAdd();
-            });
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
             base.OnModelCreating(modelBuilder);
         }
