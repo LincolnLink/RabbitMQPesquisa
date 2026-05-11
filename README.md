@@ -6,6 +6,13 @@
 
 - DotnetCore 9. com PostgreeMSQL
 
+# Referencia
+
+ - Referencia da aula de rabbitMQ:
+
+  https://www.youtube.com/watch?v=FXNSnsVQafE
+
+ - O Projeto base_API com entityFramework não tem referencia porque eu criei do zero.
 
 # Instalação na maquina
 
@@ -87,6 +94,54 @@ dotnet ef migrations remove --project Projeto.Data --startup-project API_Princip
 
 dotnet ef database update NomeDaMigration --project Projeto.Data --startup-project API_Principal
 
+# Conceitos basicos sobre mensageria.
+
+ - Producer(Produtor)
+ - Exchange
+ - Queue(Fila)
+ - RabbitqMQ(Broker)
+ - Consumer (Consumidor)
+ - Subscribe (Assinatura)
+
+# Mapa de como funciona
+
+1) Microservice/Origin(Evento Bus API)
+
+2) publish
+
+3) RabbitMQ(server/Container)
+
+  Pode ter mais de uma fila, fila-A e fila-B
+  O Exchange que decide se vai para A ou a B
+  
+4) subscribe
+
+  O microservice esta escrito em uma fila, e recebe mensagem apenas dela.
+
+5) Microservice A (Event Bus API)
+
+# Tipos de Exchange
+
+ - Direct: Roteia por routing key exata, Logs INFO, ERROR, 
+ Manda para uma fila especifica, se quiser logs de erro para uma fila e para outra .
 
 
+ - Fanout: Envia pra todas as filas, Notificação global, manda para todas as filas, notificação global, se quiser notificar todos os sistema.
+
+
+ - Topic: Usa padrão(user.*, *.error), Filtros dinâmicos, padrão de chave para distribuir mensagem, mensagem dinamicas, como pedido cancelado ou criado.
+
+
+ - Headers: Filtra por cabeçalhos, Configurações avançadas, filtra por cabeçalhos customizados.
+
+# Instalação do RabbitMQ
+
+- Baixa o Docker.
+
+- Roda o comando:
+
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+
+
+- 
 
