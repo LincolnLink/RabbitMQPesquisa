@@ -143,5 +143,96 @@ dotnet ef database update NomeDaMigration --project Projeto.Data --startup-proje
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 
-- 
+# Criando um produce e consume.
+
+Produce(pedido criado)
+
+Exchange(roteia para fila)
+
+Queeu(fila, quarda a mensagem até processar)
+
+Consume(lê a fila)
+
+
+# Abra o Visual studio 2026
+
+ - Cria uma solução em branco.
+
+ - Cria 2 projetos console.
+
+ - O primeiro é o Producer.
+
+ - O segundo é o Comsumer. 
+
+ - Instala o pacote nuget, do RabbitMQ.client
+
+ - Cria um projeto de biblioteca de classe para compartilhar o modelo.
+
+ - Cria 2 classes na biblioteca model, item e pedido com as propriedades dela.
+
+# Na classe program no projeto producer, gera o codigo que está no projeto.
+
+ ### 1) Cria as constantes.
+
+ - Cria as constante com os nomes que esta no projeto.
+
+ ### 2) Cria a conection factory, configuração de acesso ao rabbitMQ
+
+  - HostName é localhost porq esta rodando na minha maquina, se fosse produção seria em outro endereço.
+
+  - Port é o padrão de amqp, 
+
+  - CREDENCIAIS de acesso ja vem como padrão, em produção nunca use o guest.
+
+  - Virtualhost é tipo um namespace.
+
+  - AutomaticRecoveryEnabled, bota true, para conectar automaticamente.
+
+  - NetworkRecoveryInterval: defina tanto tempo deve reconectar, definido em 10s.
+
+ ### 3) Cria uma conexão para reutilizar e o canal.
+
+  - Cria canais para modificar de acordo com a demanda.
+
+  - O await using, tanto o canal tanto a conexao seja fechado.
+
+ ### 4) Criando a exchange
+
+  - exchange é um correio central do rabbitmq.
+
+  - recebe as mensagem e decide para qual fila decide enviar.
+ 
+  - Não armazena mensagem, apenas roteia.
+
+  - Parametro:
+
+  - exchange: declara o nome.
+
+  - type: usa uma rootkey, definindo uma chave.
+
+  - durable: true, reinicia do rabittmq.
+
+  - autoDelete: false, significa que a exchange não é deletada se ninguem está usando.
+
+  - argumente: não foi definido. ou bota o valor null.
+
+  ### 5) Declaração da fila
+
+   - declara a fila aonde as mensagem vai ser armazenada.
+
+   - queue: nome da fila
+
+   - durable: true, persistencia da fila, e não das mensagem.
+
+   - exclusive: false, outras conexao pode usar essa fila. 
+
+   - autodelete: false, a fila não é deletada quando o ultimo consumidor consumo.
+
+   - aguments: null, pode passar outras configuração.
+
+### 6) Bind
+
+ - Copa entre exchange e a fila, toda mensagem que chegar na exnchange X, com a routkey X, deve ir para a fila X, 
+ o X está definindo nas cosntante.
+
 
