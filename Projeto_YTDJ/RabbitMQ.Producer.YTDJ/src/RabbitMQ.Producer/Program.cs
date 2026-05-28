@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using RabbitMQ.Model;
+using System.Reflection;
 
 const string exchangeName = "pedido.exchange";
 const string queueName = "pedido.criados";
@@ -41,3 +42,49 @@ await channel.QueueBindAsync(
     routingKey: routingKey,
     arguments: null
 );
+
+Console.WriteLine("Quantos pedidos você quer enviar?");
+if(!int.TryParse(Console.ReadLine(), out var quantidadePedidos))
+{
+    quantidadePedidos = 3;
+}
+
+for (int i = 0; i < quantidadePedidos; i++)
+{
+    var pedido = CriarPedidoFake(i);
+    var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(pedido);
+    var properties = channel.CreateBasicProperties();
+
+    properties.Persistent = true;
+    properties.ContentType = "application/json";
+
+    await channel.BasicPublishAsync(
+        exchange: exchangeName,
+        routingKey: routingKey,
+        basicProperties: properties,
+        body: body
+    );
+    Console.WriteLine($"Pedido {pedido.Id} enviado com valor {pedido.ValorTotal}");
+  
+}
+
+static Pedido CriarPedidoFake(int index)
+{
+    return new Pedido
+    {
+        Id = Guid.NewGuid(),
+        ClienteEmail = $"cliente{index}@exemplo.com",
+        ValorTotal = new Random().Next(100, 5000),
+        DataCriacao = DateTime.UtcNow,
+        Itens = new List<Item>
+            {
+                new Item
+                {
+                    NomeProduto = $"Produto {index}-1",
+                    Quantidade = new Random().Next(1, 5),
+                    PrecoUnitario = new Random().Next(10, 100)
+                }
+            }
+    };
+}
+
