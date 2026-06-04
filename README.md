@@ -236,6 +236,191 @@ Consume(lê a fila)
  o X está definindo nas cosntante.
 
 
- 
+ - Cria o metodo que chama a fila:
+
+```
+    Console.WriteLine("Quantos pedidos você quer enviar?");
+    if(!int.TryParse(Console.ReadLine(), out var quantidadePedidos))
+    {
+        quantidadePedidos = 3;
+    }
+
+    for (int i = 0; i < quantidadePedidos; i++)
+    {
+        var pedido = CriarPedidoFake(i);
+        var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(pedido);
+        var properties = channel.CreateBasicProperties();
+
+        properties.Persistent = true;
+        properties.ContentType = "application/json";
+
+        await channel.BasicPublishAsync(
+            exchange: exchangeName,
+            routingKey: routingKey,
+            basicProperties: properties,
+            body: body
+        );
+        Console.WriteLine($"Pedido {pedido.Id} enviado com valor {pedido.ValorTotal}");
+      
+    }
+
+    static Pedido CriarPedidoFake(int index)
+    {
+        return new Pedido
+        {
+            Id = Guid.NewGuid(),
+            ClienteEmail = $"cliente{index}@exemplo.com",
+            ValorTotal = new Random().Next(100, 5000),
+            DataCriacao = DateTime.UtcNow,
+            Itens = new List<Item>
+                {
+                    new Item
+                    {
+                        NomeProduto = $"Produto {index}-1",
+                        Quantidade = new Random().Next(1, 5),
+                        PrecoUnitario = new Random().Next(10, 100)
+                    }
+                }
+        };
+    }
+
+```
+
+ - Ele Serialize para um array de bites, a mensagem.
+ - BasicProperties são metadados.
+ - Persistent: a mensagem grava em disco, não se perde
+ - ContentType: informa que e json.
+ - ContentEncoding: a codificação de caracteres.
+
+ - O BasicPublishAsync: está publicando a mensagem.
+ - E indica qual exchange enviar.
+ - exchange: qual exchange enviar.
+ - routingKey: indica a fila que deve enviar, define o destino.
+ - mandatory: false: se não tiver fila, a mensagem e descartada.
+ - basicproperties: meta dados configurado.
+ - body: dados.
+
+ - debug
+  - configura a conexao.
+  - cria a conexao.
+  - cria a exchange.
+  - cria a fila.
+  - faz o pedido com dados fake.
+
+ - Testei: e foi para fila do rabbitMQ.
+
+# Consumindo a fila
+
+ - cria a mesma configuração, só copiar e colar toda conexão
+ do produce para o consumer.
+
+ - cria uma outra configuração chamada "BasicQosAsync"
+
+ - prefetchSize: tamanho da mensagem
+
+ - prefetchCount: so mandad uma por vez.
+
+ - global: false: limite por canal.
+
+```
+
+await channel.BasicQosAsync(
+    prefetchSize: 0,
+    prefetchCount: 1,
+    global: false    
+);
+
+```
+
+- Depois de copiar e criar configurações, instancia o objeto que faz a leitura das filas.
+
+```
+
+var consumer = new RabbitMQ.Client.Events.AsyncEventingBasicConsumer(channel);
+
+```
+
+ - Com isso cria o evento que recebe a mensagem, usando lambda.
+ - ele usa o ea.DeliveryTag para identificar cada mensagem.
+ - ele Deserialize o body.
+ - com isso vc ja tem as informações da mensagem.
+ - tem uma linha com delay para simular um processamento.
+ - BasicAckAsync: ele confirma que recebeu a mensagem e que pode remover da fila.
+ - BasicAckAsync - deliveryTag: informa qual a mensagem estamos confirmando.
+ - BasicAckAsync - multiple: false: confirme que recebeu apenas essa mensagem.(util para processamento de bet)
 
 
+ - Cria um tratamento de erro quando le jsom.
+ - Cria um tratamento de erro.
+
+ - BasicNackAsync, nac representa que recebeu mas não consegiu processar.
+ - requeue: false, desconsidera caso tenha um deadleri.
+ - requeue: true, retorna a mensagem pra fila, e tenta processar novamente.
+
+
+```
+  consumer.ReceivedAsync += async (modal, ea) =>
+  {
+        try
+        {
+            var body = ea.Body.ToArray();
+            var json = System.Text.Encoding.UTF8.GetString(body);
+            var pedido = JsonSerializer.Deserialize<Pedido>(json);
+
+            Console.WriteLine("================================");
+            Console.WriteLine($"[Consumer] Pedido recebido: {pedido?.Id}");
+            Console.WriteLine($"[Consumer] Cliente: {pedido?.ClienteEmail}");
+            Console.WriteLine($"[Consumer] Total: {pedido?.ValorTotal:C}");
+            Console.WriteLine($"Cirado: {pedido?.DataCriacao:dd/MM/yyyy HH:mm:ss}");
+            Console.WriteLine("================================");
+
+            await Task.Delay(2000); // Simula processamento de pedido.
+
+            // Confirma o processamento da mensagem
+            await channel.BasicAckAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false
+            );
+
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"[Consumer] Erro ao desserializar o pedido: {ex.Message}");
+            await channel.BasicNackAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false,
+                requeue: true
+            );
+            throw;
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Consumer] Erro ao processar pedido: {ex.Message}");        
+            await channel.BasicNackAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false,
+                requeue: true
+            );
+            throw;
+        };
+  };
+
+```
+
+### Inciando o consumo
+
+ - BasicConsumeAsync: consome depois da configuração.
+ - queue : nome da fila
+ - autoAck: false: chave de segurança(recomendado), auto não é recomendado
+ - consumer: é toda a configuração iniciado do codigo, está na variavel: consumer
+
+ ```
+
+await channel.BasicConsumeAsync(
+    queue: queueName,
+    autoAck: false,
+    consumer: consumer
+);
+
+```

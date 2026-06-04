@@ -1,4 +1,5 @@
-﻿using RabbitMQ.Model;
+﻿using RabbitMQ.Client;
+using RabbitMQ.Model;
 using System.Reflection;
 
 const string exchangeName = "pedido.exchange";
@@ -53,19 +54,25 @@ for (int i = 0; i < quantidadePedidos; i++)
 {
     var pedido = CriarPedidoFake(i);
     var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(pedido);
-    var properties = channel.CreateBasicProperties();
-
-    properties.Persistent = true;
-    properties.ContentType = "application/json";
+    var properties = new BasicProperties
+    {
+        Persistent = true,
+        ContentType = "application/json",
+        ContentEncoding = "utf-8"
+    };
 
     await channel.BasicPublishAsync(
         exchange: exchangeName,
         routingKey: routingKey,
+        mandatory: false,
         basicProperties: properties,
         body: body
     );
     Console.WriteLine($"Pedido {pedido.Id} enviado com valor {pedido.ValorTotal}");
-  
+
+    Console.WriteLine("Pressione ENTER para enviar o proximo pedido...");
+    Console.ReadLine();
+
 }
 
 static Pedido CriarPedidoFake(int index)
