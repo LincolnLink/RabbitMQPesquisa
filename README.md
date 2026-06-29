@@ -417,10 +417,202 @@ var consumer = new RabbitMQ.Client.Events.AsyncEventingBasicConsumer(channel);
 
  ```
 
-await channel.BasicConsumeAsync(
+
+using RabbitMQ.Client;
+using RabbitMQ.Model;
+using System.Text.Json;
+
+const string exchangeName = "pedido.exchange";
+const string queueName = "pedido.criados";
+const string routingKey = "pedido.criado";
+
+
+var factory = new RabbitMQ.Client.ConnectionFactory()
+{
+    HostName = "localhost",
+    Port = 5672,
+    UserName = "guest",
+    Password = "guest",
+    VirtualHost = "/",
+    AutomaticRecoveryEnabled = true,
+    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+};
+
+await using var connection = await factory.CreateConnectionAsync();
+await using var channel = await connection.CreateChannelAsync();
+
+await channel.ExchangeDeclareAsync(
+    exchange: exchangeName,
+    type: RabbitMQ.Client.ExchangeType.Direct,
+    durable: true,
+    autoDelete: false,
+    arguments: null
+);
+
+await channel.QueueDeclareAsync(
     queue: queueName,
-    autoAck: false,
-    consumer: consumer
+    durable: true,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null
+);
+
+await channel.QueueBindAsync(
+    queue: queueName,
+    exchange: exchangeName,
+    routingKey: routingKey,
+    arguments: null
+);
+
+await channel.BasicQosAsync(
+    prefetchSize: 0,
+    prefetchCount: 1,
+    global: false    
+);
+
+var consumer = new RabbitMQ.Client.Events.AsyncEventingBasicConsumer(channel);
+
+consumer.ReceivedAsync += async (modal, ea) =>
+{
+    try
+    {
+        var body = ea.Body.ToArray();
+        var json = System.Text.Encoding.UTF8.GetString(body);
+        var pedido = JsonSerializer.Deserialize<Pedido>(json);
+
+        Console.WriteLine("================================");
+        Console.WriteLine($"[Consumer] Pedido recebido: {pedido?.Id}");
+        Console.WriteLine($"[Consumer] Cliente: {pedido?.ClienteEmail}");
+        Console.WriteLine($"[Consumer] Total: {pedido?.ValorTotal:C}");
+        Console.WriteLine($"Cirado: {pedido?.DataCriacao:dd/MM/yyyy HH:mm:ss}");
+        Console.WriteLine("================================");
+
+        await Task.Delay(2000); // Simula processamento de pedido.
+
+        // Confirma o processamento da mensagem
+        await channel.BasicAckAsync(
+            deliveryTag: ea.DeliveryTag,
+            multiple: false
+        );
+
+    }
+    catch (JsonException ex)
+    {
+        Console.WriteLine($"[Consumer] Erro ao desserializar o pedido: {ex.Message}");
+        await channel.BasicNackAsync(
+            deliveryTag: ea.DeliveryTag,
+            multiple: false,
+            requeue: true
+        );
+        throw;
+
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[Consumer] Erro ao processar pedido: {ex.Message}");        
+        await channel.BasicNackAsync(
+            deliveryTag: ea.DeliveryTag,
+            multiple: false,
+            requeue: true
+        );
+        throw;
+    };    
+};
+
+await channel.BasicConsumeAsync(
+        queue: queueName,
+        autoAck: false,
+        consumer: consumer
+);
+
+Console.WriteLine("Consumer iniciado. Pressione ENTER para sair");
+Console.ReadLine();
+
+
+```
+
+
+# Filas persistentes, a fila que quando o rabbit cai não se perde
+
+- Conseito de durabilidade no rabbitMQ
+
+- Existe niveis de durabilidade 
+
+- Durabilidade da Fila(Durable qUEUE)
+Disco no servidor, não garante as mensagem e sim a fila e não o conteudo.
+
+- Persistencia da mensagem(Persistent Message)
+Guarda a mensagem, mas precisa de uma fila durable.
+
+- Deve ser a fila duravel e a mensagem persistent, para não perder nem fila nem mensagem caso caia.
+
+# Criando outro projeto para ter exemplo de fila duravel e mensagem persistente.
+
+- Cria outro projeto e bota a configuração :
+
+- AutomaticRecoveryEnabled: reconecta automaticamente.
+
+- NetworkRecoveryInterval: Define em quanto tempo vai se reconectar.
+
+- Uma conexao pode ter varios canais.
+
+- É instanciado um canal.
+
+- await channel.QueueDeclareAsync() declamaração de fila durable!
+ - durable: true, para persistir em disco.
+ - exclusive: false, permite que multiplas conexao use a fila.
+ - autodelete: false, a fila não será apagada automaticamente quando
+ não ouver consumidores.
+
+- var message e body: variavel com a mensagem, converte para UTF8.
+
+- var properties: configura a propriedade, grava em disco e nao só fica em memoria.
+
+- 
+
+```
+
+using RabbitMQ.Client;
+
+var factory = new ConnectionFactory
+{ 
+    HostName = "localhost",
+    Port = 5672,
+    UserName = "guest",
+    Password = "guest",
+    VirtualHost = "/",
+    AutomaticRecoveryEnabled = true,
+    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
+};
+
+await using var connection = await factory.CreateConnectionAsync();
+await using var channel = await connection.CreateChannelAsync();
+
+await channel.QueueDeclareAsync(
+    queue: "persistent_queue",
+    durable: true,
+    exclusive: false,
+    autoDelete: false,
+    arguments: null
+);
+
+var message = "Mensagem de Exemplo";
+var body = System.Text.Encoding.UTF8.GetBytes(message);
+
+var properties = new BasicProperties
+{
+    Persistent = true
+};
+
+await channel.BasicPublishAsync(
+    exchange: "",
+    routingKey: "persistent_queue",
+    mandatory: false,
+    basicProperties: properties,
+    body: body
 );
 
 ```
+
+
+
