@@ -614,5 +614,7 @@ await channel.BasicPublishAsync(
 
 ```
 
+# Dead Letter Exchange (DLX)
 
+- Guarda mensagem em uma fila chamada DLX, quando a mensagem não é processada com sucesso.
 
