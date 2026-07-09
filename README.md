@@ -618,3 +618,23 @@ await channel.BasicPublishAsync(
 
 - Guarda mensagem em uma fila chamada DLX, quando a mensagem não é processada com sucesso.
 
+- DQX(ação): central de triagem: redireciona a mensagem, não guarda nada, só decide quando da erro.
+
+- DLQ(armazenamento) : fila de carta morta: caixa de devolvidos, (investigar, analisar e reprocessar.)
+
+- 3 situações que pode levar para o dead letter.
+
+ - Reject/Nack(Negative Acknowledgement) sem requeue: processa uma mensagem e diz, mensagem ruim, não quer que volte para a fila.
+
+    Ambos existem no RabbitMQ:
+        basic.reject(requeue = false)
+        basic.nack(requeue = false)
+    Isso significa: o consumidor rejeita a mensagem e não pede para ela voltar para a fila, então ela é enviada para a Dead Letter Exchange (DLX) (se configurada).
+
+ - Mensagem TTL(Time To Live) expirada: quando configura um tempo de vida, e ninguem procesou ela.
+
+    TTL (Time To Live) é o tempo máximo que a mensagem pode permanecer na fila. Se esse tempo acabar antes dela ser consumida, ela vai para a DLX.
+
+ - Queue Length atingido: Fila configurado com limite maximo.
+
+    Quando a fila atinge o limite configurado (por exemplo, x-max-length), as mensagens excedentes são descartadas ou enviadas para a DLX.
