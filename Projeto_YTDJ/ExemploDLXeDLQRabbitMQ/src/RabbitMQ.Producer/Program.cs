@@ -82,6 +82,99 @@ await channel.QueueBindAsync(
 );
 Console.WriteLine($"Fila principal conectada ao exchange com routing key: {pedidoRoutingKey}");
 
-
 Console.WriteLine("===========================================");
 Console.WriteLine();
+
+Console.WriteLine("Quantos pedidos você quer enviar?");
+if (!int.TryParse(Console.ReadLine(), out var quantidadePedidos))
+{
+    quantidadePedidos = 3;
+}
+
+Console.WriteLine();
+Console.WriteLine("===========================================");
+Console.WriteLine("📦 ENVIANDO PEDIDOS...");
+Console.WriteLine("===========================================");
+
+for (int i = 1; i <= quantidadePedidos; i++)
+{
+    var pedido = CriarPedidoErroFake(i);
+    var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(pedido);
+
+    var properties = new BasicProperties
+    {
+        Persistent = true,
+        ContentType = "application/json",
+        ContentEncoding = "utf-8",
+        MessageId = pedido.Id.ToString(),
+        Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+    };
+
+    await channel.BasicPublishAsync(
+        exchange: pedidoExchangeName,
+        routingKey: pedidoRoutingKey,
+        mandatory: false,
+        basicProperties: properties,
+        body: body);
+
+    Console.WriteLine($"✉️  Pedido {i} enviado:");
+    Console.WriteLine($"   ID: {pedido.Id}");
+    Console.WriteLine($"   Cliente: {pedido.ClienteEmail}");
+    Console.WriteLine($"   Valor: {pedido.ValorTotal:C}");
+    Console.WriteLine();
+
+    if (i < quantidadePedidos)
+    {
+        Console.WriteLine("Pressione ENTER para enviar o próximo pedido...");
+        Console.ReadLine();
+    }
+}
+
+Console.WriteLine("===========================================");
+Console.WriteLine("✅ Todos os pedidos foram enviados!");
+Console.WriteLine("===========================================");
+
+static Pedido CriarPedidoFake(int index)
+{
+
+    var valor = Random.Shared.Next(-100, 5000);
+    return new Pedido
+    {
+        Id = Guid.NewGuid(),
+        ClienteEmail = $"cliente{index}@email.com",
+        ValorTotal = valor,
+        DataCriacao = DateTime.UtcNow,
+        Itens = new List<Item>
+        {
+            new Item
+            {
+                NomeProduto = $"Produto {index}",
+                Quantidade = Random.Shared.Next(1, 5),
+                PrecoUnitario = Random.Shared.Next(20, 1000)
+            }
+        }
+    };
+}
+
+
+static Pedido CriarPedidoErroFake(int index)
+{
+
+    var valor = -100;
+    return new Pedido
+    {
+        Id = Guid.NewGuid(),
+        ClienteEmail = $"cliente{index}@email.com",
+        ValorTotal = valor,
+        DataCriacao = DateTime.UtcNow,
+        Itens = new List<Item>
+        {
+            new Item
+            {
+                NomeProduto = $"Produto {index}",
+                Quantidade = Random.Shared.Next(1, 5),
+                PrecoUnitario = Random.Shared.Next(20, 1000)
+            }
+        }
+    };
+}
