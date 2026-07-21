@@ -1,5 +1,6 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Model;
 using System.Text;
 using System.Text.Json;
 
@@ -102,3 +103,124 @@ Console.WriteLine();
 // Consumer
 var consumer = new AsyncEventingBasicConsumer(channel);
 
+consumer.ReceivedAsync += async (_, ea) =>
+{
+    var body = ea.Body.ToArray();
+    var json = Encoding.UTF8.GetString(body);
+
+    try
+    {
+        var pedido = JsonSerializer.Deserialize<Pedido>(json);
+
+        Console.WriteLine("┌─────────────────────────────────────────┐");
+        Console.WriteLine("│ 📨 NOVA MENSAGEM RECEBIDA               │");
+        Console.WriteLine("└─────────────────────────────────────────┘");
+        Console.WriteLine($"  ID:      {pedido?.Id}");
+        Console.WriteLine($"  Cliente: {pedido?.ClienteEmail}");
+        Console.WriteLine($"  Valor:   {pedido?.ValorTotal:C}");
+        Console.WriteLine($"  Data:    {pedido?.DataCriacao:dd/MM/yyyy HH:mm:ss}");
+        Console.WriteLine();
+
+        // REGRA DE NEGÓCIO: validar pedido
+        if (pedido == null)
+        {
+            throw new Exception("Pedido veio nulo!");
+        }
+
+        // VALIDAÇÃO 1: Valor não pode ser negativo
+        if (pedido.ValorTotal < 0)
+        {
+            Console.WriteLine("❌ ERRO: Valor total negativo!");
+            Console.WriteLine($"   Valor inválido: {pedido.ValorTotal:C}");
+            Console.WriteLine("   ⚠️  Rejeitando mensagem → vai para DLQ");
+            Console.WriteLine();
+
+            // ERRO DEFINITIVO - NÃO VAI CONSEGUIR PROCESSAR NUNCA
+            // Manda para DLQ (requeue: false)
+            await channel.BasicNackAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false,
+                requeue: false); // ← AQUI! Vai para DLX/DLQ
+
+            return;
+        }
+
+        // VALIDAÇÃO 2: Email deve estar preenchido
+        if (string.IsNullOrWhiteSpace(pedido.ClienteEmail))
+        {
+            Console.WriteLine("❌ ERRO: Email do cliente vazio!");
+            Console.WriteLine("   ⚠️  Rejeitando mensagem → vai para DLQ");
+            Console.WriteLine();
+
+            await channel.BasicNackAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false,
+                requeue: false);
+
+            return;
+        }
+
+        // SIMULAÇÃO: Erro aleatório temporário (ex: banco fora do ar)
+        if (Random.Shared.Next(0, 10) == 5)
+        {
+            throw new Exception("Banco de dados temporariamente indisponível!");
+        }
+
+        // ✅ TUDO OK! Processar pedido
+        Console.WriteLine("⚙️  Processando pedido...");
+        await Task.Delay(1000); // Simula processamento
+
+        Console.WriteLine("✅ PEDIDO PROCESSADO COM SUCESSO!");
+        Console.WriteLine();
+
+        // CONFIRMAR que processou
+        await channel.BasicAckAsync(
+            deliveryTag: ea.DeliveryTag,
+            multiple: false);
+    }
+    catch (JsonException ex)
+    {
+        // Erro de JSON = mensagem corrompida = erro definitivo
+        Console.WriteLine("┌─────────────────────────────────────────┐");
+        Console.WriteLine("│ ❌ ERRO DE DESERIALIZAÇÃO               │");
+        Console.WriteLine("└─────────────────────────────────────────┘");
+        Console.WriteLine($"  Erro: {ex.Message}");
+        Console.WriteLine($"  JSON: {json}");
+        Console.WriteLine("  ⚠️  Mensagem corrompida → vai para DLQ");
+        Console.WriteLine();
+
+        // ERRO DEFINITIVO - mensagem está quebrada
+        await channel.BasicNackAsync(
+            ea.DeliveryTag,
+            multiple: false,
+            requeue: false); // Vai para DLQ
+    }
+    catch (Exception ex)
+    {
+        // Erro temporário (ex: banco fora, API lenta)
+        Console.WriteLine("┌─────────────────────────────────────────┐");
+        Console.WriteLine("│ ⚠️  ERRO TEMPORÁRIO                     │");
+        Console.WriteLine("└─────────────────────────────────────────┘");
+        Console.WriteLine($"  Erro: {ex.Message}");
+        Console.WriteLine("  🔄 Recolocando na fila para retry...");
+        Console.WriteLine();
+
+        // ERRO TEMPORÁRIO - tenta de novo
+        await channel.BasicNackAsync(
+            ea.DeliveryTag,
+            multiple: false,
+            requeue: true); // ← Volta para a fila, tenta de novo
+    }
+};
+
+await channel.BasicConsumeAsync(
+    queue: pedidoQueueName,
+    autoAck: false, // IMPORTANTE! Confirmação manual
+    consumer: consumer);
+
+Console.WriteLine("===========================================");
+Console.WriteLine("✅ Consumer rodando!");
+Console.WriteLine("===========================================");
+Console.WriteLine();
+Console.WriteLine("Pressione ENTER para parar o consumer...");
+Console.ReadLine();
