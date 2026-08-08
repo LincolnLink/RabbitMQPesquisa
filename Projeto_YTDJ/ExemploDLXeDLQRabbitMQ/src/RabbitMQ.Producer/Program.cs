@@ -1,13 +1,13 @@
 ﻿using RabbitMQ.Client;
 using RabbitMQ.Model;
 
-const string pedidoExchangeName = "pedidoCriado.exchange";
-const string pedidoQueueName = "pedidoCriado.queue";
-const string pedidoRoutingKey = "pedidoCriado.routingKey";
+const string Exchange_Principal_Pedido = "exchange_Principal_Pedido";
+const string Queue_Principal_Pedido = "queue_Principal_Pedido";
+const string RoutingKey_Principal_Pedido = "routingKey_Principal_Pedido";
 
-const string pedidoDLXName = "pedido.deadLetter.exchange";
-const string pedidoDLQName = "pedido.deadLetter.queue";
-const string pedidoDLXRoutingKey = "pedido.deadLetter.routingKey";
+const string DLX_Exchange_Dead_Letter = "exchange_Dead_Letter";
+const string DLQ_Queue_Dead_Letter = "queue_Dead_Letter";
+const string RoutingKey_DLX = "routingKey_Dead_Letter";
 
 var factory = new ConnectionFactory()
 {
@@ -28,59 +28,59 @@ Console.WriteLine("🚀 CONFIGURANDO EXCHANGES E FILAS...");
 Console.WriteLine("===========================================");
 
 await channel.ExchangeDeclareAsync(
-    exchange: pedidoExchangeName,
+    exchange: Exchange_Principal_Pedido,
     type: ExchangeType.Direct,
     durable: true,
     autoDelete: false
 );
-Console.WriteLine($"Exchange principal criado: {pedidoExchangeName}");
+Console.WriteLine($"Exchange principal criado: {Exchange_Principal_Pedido}");
 
 await channel.ExchangeDeclareAsync(
-    exchange: pedidoDLXName,
+    exchange: DLX_Exchange_Dead_Letter,
     type: ExchangeType.Direct,
     durable: true,
     autoDelete: false
 );
-Console.WriteLine($"DLX criado: {pedidoDLXName}");
+Console.WriteLine($"DLX criado: {DLX_Exchange_Dead_Letter}");
 
 await channel.QueueDeclareAsync(
-    queue: pedidoDLQName,
+    queue: DLQ_Queue_Dead_Letter,
     durable: true,
     exclusive: false,
     autoDelete: false,
     arguments: null
 );
-Console.WriteLine($"DLQ criada: {pedidoDLQName}");
+Console.WriteLine($"DLQ criada: {DLQ_Queue_Dead_Letter}");
 
 await channel.QueueBindAsync(
-    queue: pedidoDLQName,
-    exchange: pedidoDLXName,
-    routingKey: pedidoDLXRoutingKey
+    queue: DLQ_Queue_Dead_Letter,
+    exchange: DLX_Exchange_Dead_Letter,
+    routingKey: RoutingKey_DLX
 );
-Console.WriteLine($"DLQ conectada à DLX com routing key: {pedidoDLXRoutingKey}");
+Console.WriteLine($"DLQ conectada à DLX com routing key: {RoutingKey_DLX}");
 
 var mainQueueArgs = new Dictionary<string, object>
 {
-   {"x-dead-letter-exchange", pedidoDLXName },
-   {"x-dead-letter-routing-key", pedidoDLXRoutingKey }
+   {"x-dead-letter-exchange", DLX_Exchange_Dead_Letter },
+   {"x-dead-letter-routing-key", RoutingKey_DLX }
 };
 
 await channel.QueueDeclareAsync(
-    queue: pedidoQueueName,
+    queue: Queue_Principal_Pedido,
     durable: true,
     exclusive: false,
     autoDelete: false,
     arguments: mainQueueArgs
 );
-Console.WriteLine($"Fila principal criada: {pedidoQueueName}");
-Console.WriteLine($" └─ Configurada para usar DLX: {pedidoDLXName}");
+Console.WriteLine($"Fila principal criada: {Queue_Principal_Pedido}");
+Console.WriteLine($" └─ Configurada para usar DLX: {DLX_Exchange_Dead_Letter}");
 
 await channel.QueueBindAsync(
-    queue: pedidoQueueName,
-    exchange: pedidoExchangeName,
-    routingKey: pedidoRoutingKey
+    queue: Queue_Principal_Pedido,
+    exchange: Exchange_Principal_Pedido,
+    routingKey: RoutingKey_Principal_Pedido
 );
-Console.WriteLine($"Fila principal conectada ao exchange com routing key: {pedidoRoutingKey}");
+Console.WriteLine($"Fila principal conectada ao exchange com routing key: {RoutingKey_Principal_Pedido}");
 
 Console.WriteLine("===========================================");
 Console.WriteLine();
@@ -111,8 +111,8 @@ for (int i = 1; i <= quantidadePedidos; i++)
     };
 
     await channel.BasicPublishAsync(
-        exchange: pedidoExchangeName,
-        routingKey: pedidoRoutingKey,
+        exchange: Exchange_Principal_Pedido,
+        routingKey: RoutingKey_Principal_Pedido,
         mandatory: false,
         basicProperties: properties,
         body: body);

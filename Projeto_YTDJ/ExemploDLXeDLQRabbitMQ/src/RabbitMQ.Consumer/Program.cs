@@ -4,13 +4,13 @@ using RabbitMQ.Model;
 using System.Text;
 using System.Text.Json;
 
-const string pedidoExchangeName = "pedidoCriado.exchange";
-const string pedidoQueueName = "pedidoCriado.queue";
-const string pedidoRoutingKey = "pedidoCriado.routingKey";
+const string Exchange_Principal_Pedido = "exchange_Principal_Pedido";
+const string Queue_Principal_Pedido = "queue_Principal_Pedido";
+const string RoutingKey_Principal_Pedido = "routingKey_Principal_Pedido";
 
-const string pedidoDLXName = "pedido.deadLetter.exchange";
-const string pedidoDLQName = "pedido.deadLetter.queue";
-const string pedidoDLXRoutingKey = "pedido.deadLetter.routingKey";
+const string DLX_Exchange_Dead_Letter = "exchange_Dead_Letter";
+const string DLQ_Queue_Dead_Letter = "queue_Dead_Letter";
+const string RoutingKey_DLX = "routingKey_Dead_Letter";
 
 var factory = new ConnectionFactory()
 {
@@ -34,7 +34,7 @@ Console.WriteLine("===========================================");
 
 // Exchange principal
 await channel.ExchangeDeclareAsync(
-    exchange: pedidoExchangeName,
+    exchange: Exchange_Principal_Pedido,
     type: ExchangeType.Direct,
     durable: true,
     autoDelete: false
@@ -42,7 +42,7 @@ await channel.ExchangeDeclareAsync(
 
 // DLX
 await channel.ExchangeDeclareAsync(
-    exchange: pedidoDLXName,
+    exchange: DLX_Exchange_Dead_Letter,
     type: ExchangeType.Direct,
     durable: true,
     autoDelete: false
@@ -50,7 +50,7 @@ await channel.ExchangeDeclareAsync(
 
 // DLQ
 await channel.QueueDeclareAsync(
-    queue: pedidoDLQName,
+    queue: DLQ_Queue_Dead_Letter,
     durable: true,
     exclusive: false,
     autoDelete: false,
@@ -59,20 +59,20 @@ await channel.QueueDeclareAsync(
 
 // Bind DLQ à DLX
 await channel.QueueBindAsync(
-    queue: pedidoDLQName,
-    exchange: pedidoDLXName,
-    routingKey: pedidoDLXRoutingKey
+    queue: DLQ_Queue_Dead_Letter,
+    exchange: DLX_Exchange_Dead_Letter,
+    routingKey: RoutingKey_DLX
 );
 
 // Fila Principal com DLX configurada
 var mainQueueArgs = new Dictionary<string, object>
 {
-    { "x-dead-letter-exchange", pedidoDLXName },
-    { "x-dead-letter-routing-key", pedidoDLXRoutingKey }
+    { "x-dead-letter-exchange", DLX_Exchange_Dead_Letter },
+    { "x-dead-letter-routing-key", RoutingKey_DLX }
 };
 
 await channel.QueueDeclareAsync(
-    queue: pedidoQueueName,
+    queue: Queue_Principal_Pedido,
     durable: true,
     exclusive: false,
     autoDelete: false,
@@ -81,9 +81,9 @@ await channel.QueueDeclareAsync(
 
 // Bind fila principal à exchange principal
 await channel.QueueBindAsync(
-    queue: pedidoQueueName,
-    exchange: pedidoExchangeName,
-    routingKey: pedidoRoutingKey
+    queue: Queue_Principal_Pedido,
+    exchange: Exchange_Principal_Pedido,
+    routingKey: RoutingKey_Principal_Pedido
 );
 
 // Qos - processar 1 mensagem por vez
@@ -214,7 +214,7 @@ consumer.ReceivedAsync += async (_, ea) =>
 };
 
 await channel.BasicConsumeAsync(
-    queue: pedidoQueueName,
+    queue: Queue_Principal_Pedido,
     autoAck: false, // IMPORTANTE! Confirmação manual
     consumer: consumer);
 
