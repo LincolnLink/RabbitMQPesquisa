@@ -124,7 +124,14 @@ consumer.ReceivedAsync += async (_, ea) =>
         // REGRA DE NEGÓCIO: validar pedido
         if (pedido == null)
         {
-            throw new Exception("Pedido veio nulo!");
+            Console.WriteLine("❌ Pedido nulo. Enviando para a DLQ.");
+
+            await channel.BasicNackAsync(
+                deliveryTag: ea.DeliveryTag,
+                multiple: false,
+                requeue: false);
+
+            return;
         }
 
         // VALIDAÇÃO 1: Valor não pode ser negativo
