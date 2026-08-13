@@ -65,7 +65,7 @@ await channel.QueueBindAsync(
 );
 
 // Fila Principal com DLX configurada
-var mainQueueArgs = new Dictionary<string, object>
+var mainQueueArgs = new Dictionary<string, object?>
 {
     { "x-dead-letter-exchange", DLX_Exchange_Dead_Letter },
     { "x-dead-letter-routing-key", RoutingKey_DLX }

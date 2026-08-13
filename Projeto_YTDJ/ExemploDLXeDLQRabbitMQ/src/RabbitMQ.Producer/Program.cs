@@ -59,7 +59,7 @@ await channel.QueueBindAsync(
 );
 Console.WriteLine($"DLQ conectada à DLX com routing key: {RoutingKey_DLX}");
 
-var mainQueueArgs = new Dictionary<string, object>
+var mainQueueArgs = new Dictionary<string, object?>
 {
    {"x-dead-letter-exchange", DLX_Exchange_Dead_Letter },
    {"x-dead-letter-routing-key", RoutingKey_DLX }
