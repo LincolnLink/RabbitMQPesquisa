@@ -98,7 +98,8 @@ Console.WriteLine("===========================================");
 
 for (int i = 1; i <= quantidadePedidos; i++)
 {
-    var pedido = CriarPedidoErroFake(i);
+    //var pedido = CriarPedidoErroFake(i);
+    var pedido = CriarPedidoFake(i);
     var body = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(pedido);
 
     var properties = new BasicProperties
