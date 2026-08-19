@@ -638,3 +638,71 @@ await channel.BasicPublishAsync(
  - Queue Length atingido: Fila configurado com limite maximo.
 
     Quando a fila atinge o limite configurado (por exemplo, x-max-length), as mensagens excedentes são descartadas ou enviadas para a DLX.
+
+# Retry Inteligente no RabbitMQ
+
+ - Mecanismo de reação.
+
+ - Quando tentar novamento?
+
+ - Até quando continuar tentando?
+
+ - Considera o time e o limite.
+
+ - Retry é uma politica, e toda politica precisa de parametro.
+
+ - Intervalos entre tentativa, numero maximo, e o destino, isso e modelagem de comportamento.
+
+ - Todo erro merece um retry?, r: não.
+
+# 2 Categorias de erros Retry
+
+ - Erros transitorios: Podem desaparecer com o tempo, faz sentido tentar novamento.
+
+ - Erros definitivos: pedido com valor negativo, ma formatação, violação de regra de negocio, dado invalido tentar novamente não resolve, se insistir e desperdicio de recurso.
+
+# 3 Tempo Retry
+
+ - Retry inteligente, espera o tempo de recuperação! 
+
+# 4 Limite 
+
+ - É o que impede o loop.
+
+ - para nao consumir recurso
+
+ - max retrye
+
+ - tempo maximo de retry: essa mensagem pode tentar até 30 minutos, depois disso aborta.
+
+# 5 Retry é uma proteção
+
+ - protege o work, a fila principal.
+
+ - evita derrubar a dependencia, latencia, amplia o erro.
+
+# 6 responsabilidade 
+
+ - Qual comportamento é aceitavo sobe falha.
+
+ - alta taxa de tentantiva.
+ 
+# 7 Resumo
+
+ - Retry inteligente: 
+  - Classifica erro.
+  - Controla tempo.
+  - Define limite.
+  - Define o destino final.
+  - Evita o loop infinito.
+  - E evita a tempestade de requisições.
+  - Retry não é repetir.
+  - Retry é modela o comportamento sobre a falha.
+  - É modelar a falha.
+  - É uma responsabilidade arquitetural. 
+
+
+
+
+
+
