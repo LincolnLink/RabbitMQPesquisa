@@ -19,7 +19,7 @@ const string retryRoutingKey = "routingKey_retry";
 const int maxRetryAttempsts = 3;
 const int retryDelayMilliseconds = 5000;
 
-const bool simular = false;
+//const bool simularErro = true;
 
 var factory = new ConnectionFactory()
 {
@@ -118,6 +118,11 @@ consumer.ReceivedAsync += async (_, ea) =>
             await channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
             return;
         }
+
+        //if (simularErro)
+        //{
+        //    throw new Exception("Erro temporário simulado");
+        //}
 
         Console.WriteLine("SUCESSO");
         Console.WriteLine();
